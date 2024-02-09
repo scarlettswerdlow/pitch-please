@@ -46,3 +46,4 @@ def write_image(run_sub_path:str, type_:str, image_url:str):
     """Function writing image to file"""
     write_fp = f"{run_sub_path}/{type_}.jpg"
     urllib.request.urlretrieve(image_url, write_fp)
+    return write_fp

@@ -1,8 +1,9 @@
 """Module for generating pitch with OpenAI services"""
 
 import json
-from utils_openai import get_text, parse_text, get_image, get_revised_prompt, get_image_url
 from utils import write_text, write_image, make_run, make_run_sub, read_yaml
+from utils_openai import get_text, parse_text, get_image, get_revised_prompt, get_image_url
+from utils_pptx import make_presentation
 
 ################################################################################
 #                                                                              #
@@ -97,9 +98,10 @@ def get_write_image(api_key:str, image_prompt:str, run_sub_path:str):
     except Exception as error:
         raise RuntimeError("Failed to get image url from image response") from error
     try:
-        write_image(run_sub_path, "logo", image_url)
+        logo_fp = write_image(run_sub_path, "logo", image_url)
     except Exception as error:
         raise RuntimeError("Failed to write logo to file") from error
+    return logo_fp
 
 def main(config_fp):
     """Function for running module"""
@@ -124,13 +126,18 @@ def main(config_fp):
     except RuntimeError as error:
         print(f"An error has occured: {error}")
         return
-    image_prompt = make_write_image_prompt(text.get("name", "unnamed company"), description, vibes,
-                                            run_sub_path)
+    name = text.get("name")
+    tag = text.get("tag")
+    image_prompt = make_write_image_prompt(name, description, vibes, run_sub_path)
     try:
-        get_write_image(api_key, image_prompt, run_sub_path)
+        logo_fp = get_write_image(api_key, image_prompt, run_sub_path)
     except RuntimeError as error:
         print(f"An error has occured: {error}")
         return
+    try:
+        make_presentation(logo_fp, name, tag, f"{run_sub_path}/presentation.pptx")
+    except Exception as error:
+        print(f"An error has occured: {error}")
     print(f"Run {run} succeeded.")
 
 ################################################################################
